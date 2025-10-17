@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createReview } from "../api/reviewApi"; // ✅ import your API
 
 export default function User() {
     // Example user details
@@ -37,13 +38,10 @@ export default function User() {
         },
     ]);
 
-    // State for reviews
+    const [selectedBooking, setSelectedBooking] = useState("");
     const [reviews, setReviews] = useState([]);
-
-    // Modal state
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewForm, setReviewForm] = useState({
-        tutor: "",
         rating: 5,
         comment: "",
     });
@@ -54,23 +52,39 @@ export default function User() {
         setReviewForm({ ...reviewForm, [name]: value });
     };
 
+    // Generate unique ID (simple random string)
+    const generateReviewID = () =>
+        "REV-" + Math.random().toString(36).substring(2, 9).toUpperCase();
+
     // Handle review submission
-    const submitReview = () => {
-        if (!reviewForm.tutor || !reviewForm.comment) {
-            alert("Please select a tutor and leave a comment.");
+    const submitReview = async () => {
+        if (!reviewForm.comment.trim()) {
+            alert("Please leave a comment.");
             return;
         }
 
         const newReview = {
-            tutor: reviewForm.tutor,
+            reviewID: generateReviewID(),
             rating: reviewForm.rating,
             comment: reviewForm.comment,
-            date: new Date().toLocaleString(),
+            dateSubmitted: new Date().toISOString(),
         };
 
-        setReviews([...reviews, newReview]);
-        setShowReviewModal(false);
-        setReviewForm({ tutor: "", rating: 5, comment: "" });
+        try {
+            // ✅ Insert into database
+            const savedReview = await createReview(newReview);
+
+            // ✅ Add to local list for display
+            setReviews([...reviews, savedReview]);
+            alert("Review submitted successfully!");
+
+            // ✅ Reset modal & form
+            setShowReviewModal(false);
+            setReviewForm({ rating: 5, comment: "" });
+        } catch (err) {
+            console.error("Error submitting review:", err);
+            alert("Failed to submit review. Please try again.");
+        }
     };
 
     return (
@@ -86,43 +100,34 @@ export default function User() {
 
             {/* Booking History */}
             <div className="mb-10">
-                <h3 className="text-2xl font-bold mb-6">My Bookings</h3>
-                <div className="space-y-4">
+                <h3 className="text-2xl font-bold mb-4">My Bookings</h3>
+                <select
+                    className="w-full p-3 border rounded-lg mb-6"
+                    value={selectedBooking}
+                    onChange={(e) => setSelectedBooking(e.target.value)}
+                >
+                    <option value="">Select a booking to view details</option>
                     {bookings.map((booking, index) => (
-                        <div
-                            key={index}
-                            className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition"
-                        >
-                            <h4 className="text-xl font-semibold mb-2">
-                                Tutor: {booking.tutor}
-                            </h4>
-                            <p>
-                                <span className="font-semibold">Start:</span>{" "}
-                                {new Date(booking.startTime).toLocaleString()}
-                            </p>
-                            <p>
-                                <span className="font-semibold">End:</span>{" "}
-                                {new Date(booking.endTime).toLocaleString()}
-                            </p>
-                            <p>
-                                <span className="font-semibold">Location:</span>{" "}
-                                {booking.location}
-                            </p>
-                            <p>
-                                <span className="font-semibold">Mode:</span> {booking.mode}
-                            </p>
-                            <p
-                                className={`font-semibold mt-2 ${
-                                    booking.status === "Upcoming"
-                                        ? "text-blue-600"
-                                        : "text-gray-500"
-                                }`}
-                            >
-                                Status: {booking.status}
-                            </p>
-                        </div>
+                        <option key={index} value={index}>
+                            {booking.tutor} — {new Date(booking.startTime).toLocaleDateString()}
+                        </option>
                     ))}
-                </div>
+                </select>
+
+                {selectedBooking !== "" && (
+                    <div className="p-6 bg-white rounded-xl shadow transition">
+                        <h4 className="text-xl font-semibold mb-2">
+                            Tutor: {bookings[selectedBooking].tutor}
+                        </h4>
+                        <p><span className="font-semibold">Start:</span> {new Date(bookings[selectedBooking].startTime).toLocaleString()}</p>
+                        <p><span className="font-semibold">End:</span> {new Date(bookings[selectedBooking].endTime).toLocaleString()}</p>
+                        <p><span className="font-semibold">Location:</span> {bookings[selectedBooking].location}</p>
+                        <p><span className="font-semibold">Mode:</span> {bookings[selectedBooking].mode}</p>
+                        <p className={`font-semibold mt-2 ${bookings[selectedBooking].status === "Upcoming" ? "text-blue-600" : "text-gray-500"}`}>
+                            Status: {bookings[selectedBooking].status}
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Leave Review Button */}
@@ -144,11 +149,10 @@ export default function User() {
                     <div className="space-y-4">
                         {reviews.map((review, index) => (
                             <div key={index} className="p-4 bg-white rounded-xl shadow">
-                                <p className="font-semibold">{review.tutor}</p>
                                 <p>⭐ {review.rating} / 5</p>
                                 <p>{review.comment}</p>
                                 <p className="text-sm text-gray-500 mt-2">
-                                    {review.date}
+                                    {new Date(review.dateSubmitted).toLocaleString()}
                                 </p>
                             </div>
                         ))}
@@ -162,42 +166,37 @@ export default function User() {
                     <div className="bg-white p-6 rounded-xl shadow-lg w-96">
                         <h3 className="text-xl font-bold mb-4">Leave a Review</h3>
 
-                        {/* Tutor Dropdown */}
-                        <label className="block mb-2 font-medium">Tutor</label>
-                        <select
-                            name="tutor"
-                            value={reviewForm.tutor}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg p-2 mb-4"
-                        >
-                            <option value="">Select a tutor</option>
-                            {bookings.map((b, i) => (
-                                <option key={i} value={b.tutor}>
-                                    {b.tutor}
-                                </option>
-                            ))}
-                        </select>
-
                         {/* Rating */}
-                        <label className="block mb-2 font-medium">Rating</label>
-                        <input
-                            type="number"
-                            name="rating"
-                            min="1"
-                            max="5"
-                            value={reviewForm.rating}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg p-2 mb-4"
-                        />
+                        <div className="mb-4">
+                            <label className="block mb-2 font-medium" htmlFor="rating">
+                                Rating
+                            </label>
+                            <input
+                                id="rating"
+                                type="number"
+                                name="rating"
+                                min="1"
+                                max="5"
+                                value={reviewForm.rating}
+                                onChange={handleChange}
+                                className="w-full border rounded-lg p-2"
+                            />
+                        </div>
 
                         {/* Comment */}
-                        <label className="block mb-2 font-medium">Comment</label>
-                        <textarea
-                            name="comment"
-                            value={reviewForm.comment}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg p-2 mb-4"
-                        />
+                        <div className="mb-4">
+                            <label className="block mb-2 font-medium" htmlFor="comment">
+                                Comment
+                            </label>
+                            <textarea
+                                id="comment"
+                                name="comment"
+                                value={reviewForm.comment}
+                                onChange={handleChange}
+                                placeholder="Include the tutor's name in your comment"
+                                className="w-full border rounded-lg p-2"
+                            />
+                        </div>
 
                         {/* Buttons */}
                         <div className="flex justify-end space-x-2">
