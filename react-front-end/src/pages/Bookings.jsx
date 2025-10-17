@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import { createPayment } from "../api/paymentApi"; // 👈 Import your payment API
 
 export default function Bookings() {
-    // Example tutors (later this would come from backend or context)
     const tutors = ["Sarah Johnson", "Michael Smith", "Aisha Patel"];
 
     const [formData, setFormData] = useState({
@@ -10,16 +10,57 @@ export default function Bookings() {
         endTime: "",
         location: "",
         mode: "",
+        amount: "",
+        paymentMethod: "",
     });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    // Helper function to generate IDs
+    const generateID = (prefix) =>
+        `${prefix}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Booking submitted:", formData);
-        alert("Booking submitted! 🎉");
+
+        if (!formData.amount || !formData.paymentMethod) {
+            alert("Please provide payment details before confirming.");
+            return;
+        }
+
+        // Create payment object for backend
+        const newPayment = {
+            paymentID: generateID("PAY"),
+            amount: parseFloat(formData.amount),
+            paymentDate: new Date().toISOString(),
+            paymentMethod: formData.paymentMethod,
+            status: "Pending",
+            transactionID: generateID("TXN"),
+        };
+
+        try {
+            // Send to backend
+            await createPayment(newPayment);
+
+            console.log("Payment submitted:", newPayment);
+            alert("Booking confirmed and payment recorded successfully! 💸");
+
+            // Clear form
+            setFormData({
+                tutor: "",
+                startTime: "",
+                endTime: "",
+                location: "",
+                mode: "",
+                amount: "",
+                paymentMethod: "",
+            });
+        } catch (error) {
+            console.error("Error creating payment:", error);
+            alert("Failed to record payment. Please try again.");
+        }
     };
 
     return (
@@ -105,10 +146,52 @@ export default function Bookings() {
                     </select>
                 </div>
 
+                {/* Payment Details Section */}
+                <div className="border-t pt-6 mt-6">
+                    <h3 className="text-xl font-semibold mb-4 text-center">
+                        Payment Details
+                    </h3>
+
+                    {/* Amount */}
+                    <div className="mb-4">
+                        <label className="block font-medium mb-2">Amount (ZAR)</label>
+                        <input
+                            type="number"
+                            name="amount"
+                            min="0"
+                            step="0.01"
+                            value={formData.amount}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="Enter amount e.g. 250"
+                            required
+                        />
+                    </div>
+
+                    {/* Payment Method */}
+                    <div>
+                        <label className="block font-medium mb-2">Payment Method</label>
+                        <select
+                            name="paymentMethod"
+                            value={formData.paymentMethod}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                            required
+                        >
+                            <option value="">-- Choose payment method --</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="EFT">EFT</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                </div>
+
                 {/* Submit */}
                 <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
                 >
                     Confirm Booking
                 </button>
