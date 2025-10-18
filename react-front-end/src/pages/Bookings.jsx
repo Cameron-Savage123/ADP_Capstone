@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { createPayment } from "../api/paymentApi"; // 👈 Import your payment API
+// src/pages/Bookings.jsx
+import React, { useState, useEffect } from "react";
+import { createPayment } from "../api/paymentApi";
+import { getAllSubjects } from "../api/subjectApi"; // 👈 Import subject API
 
 export default function Bookings() {
     const tutors = ["Sarah Johnson", "Michael Smith", "Aisha Patel"];
+
+    const [subjectsList, setSubjectsList] = useState([]);
 
     const [formData, setFormData] = useState({
         tutor: "",
@@ -12,25 +16,38 @@ export default function Bookings() {
         mode: "",
         amount: "",
         paymentMethod: "",
+        subjectCode: "",
     });
+
+    // Load subjects from database
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                const data = await getAllSubjects();
+                setSubjectsList(data);
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            }
+        };
+        fetchSubjects();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Helper function to generate IDs
+    // Helper to generate IDs
     const generateID = (prefix) =>
         `${prefix}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.amount || !formData.paymentMethod) {
-            alert("Please provide payment details before confirming.");
+        if (!formData.amount || !formData.paymentMethod || !formData.subjectCode) {
+            alert("Please select a subject and provide payment details before confirming.");
             return;
         }
 
-        // Create payment object for backend
         const newPayment = {
             paymentID: generateID("PAY"),
             amount: parseFloat(formData.amount),
@@ -41,13 +58,11 @@ export default function Bookings() {
         };
 
         try {
-            // Send to backend
             await createPayment(newPayment);
-
-            console.log("Payment submitted:", newPayment);
+            console.log("Payment recorded:", newPayment);
             alert("Booking confirmed and payment recorded successfully! 💸");
 
-            // Clear form
+            // Reset form
             setFormData({
                 tutor: "",
                 startTime: "",
@@ -56,6 +71,7 @@ export default function Bookings() {
                 mode: "",
                 amount: "",
                 paymentMethod: "",
+                subjectCode: "",
             });
         } catch (error) {
             console.error("Error creating payment:", error);
@@ -90,7 +106,26 @@ export default function Bookings() {
                     </select>
                 </div>
 
-                {/* Start time */}
+                {/* Subject dropdown */}
+                <div>
+                    <label className="block font-medium mb-2">Select Subject</label>
+                    <select
+                        name="subjectCode"
+                        value={formData.subjectCode}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    >
+                        <option value="">-- Choose a subject --</option>
+                        {subjectsList.map((subject) => (
+                            <option key={subject.subjectCode} value={subject.subjectCode}>
+                                {subject.subjectCode} - {subject.subjectName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Start Time */}
                 <div>
                     <label className="block font-medium mb-2">Start Time</label>
                     <input
@@ -103,7 +138,7 @@ export default function Bookings() {
                     />
                 </div>
 
-                {/* End time */}
+                {/* End Time */}
                 <div>
                     <label className="block font-medium mb-2">End Time</label>
                     <input
@@ -146,7 +181,7 @@ export default function Bookings() {
                     </select>
                 </div>
 
-                {/* Payment Details Section */}
+                {/* Payment Section */}
                 <div className="border-t pt-6 mt-6">
                     <h3 className="text-xl font-semibold mb-4 text-center">
                         Payment Details
