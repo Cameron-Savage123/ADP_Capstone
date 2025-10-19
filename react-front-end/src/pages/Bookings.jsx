@@ -1,7 +1,7 @@
 // src/pages/Bookings.jsx
 import React, { useState, useEffect } from "react";
 import { createPayment } from "../api/paymentApi";
-import { getAllSubjects } from "../api/subjectApi"; // 👈 Import subject API
+import { getAllSubjects } from "../api/subjectApi";
 
 export default function Bookings() {
     const tutors = ["Sarah Johnson", "Michael Smith", "Aisha Patel"];

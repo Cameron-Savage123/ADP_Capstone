@@ -62,7 +62,7 @@ button:hover, .btn:hover {
     transform: translateY(-2px);
 }
 
-/* === Clean Inline Form Styling === */
+/* === Form Styling === */
 form {
     display: flex;
     flex-direction: column;
@@ -76,7 +76,7 @@ form div {
     justify-content: space-between;
     gap: 1rem; /* space between label and input */
     width: 100%;
-    max-width: 400px; /* keep form compact like before */
+    max-width: 400px;
     margin: 0 auto;
 }
 
@@ -84,7 +84,7 @@ label {
     width: 30%; /* fixed label width */
     font-weight: 600;
     color: #2c2c2c;
-    text-align: right; /* align text nicely beside input */
+    text-align: right; /* align text beside the input */
 }
 
 input, select, textarea {
@@ -103,7 +103,7 @@ input:focus, select:focus, textarea:focus {
     outline: none;
 }
 
-/* Keep the button compact & separate */
+/* Keep the button compact */
 form button {
     margin-top: 1rem;
     align-self: center;

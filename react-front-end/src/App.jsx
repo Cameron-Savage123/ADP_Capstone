@@ -24,13 +24,13 @@ export default function App() {
         const user = JSON.parse(localStorage.getItem("loggedInUser"));
         if (user) setLoggedInUser(user);
 
-        // handler to update when Login writes to localStorage in same tab
+        // handler to update when Login writes to localStorage
         const handleAuthChange = () => {
             const u = JSON.parse(localStorage.getItem("loggedInUser"));
             setLoggedInUser(u);
         };
 
-        // listen for custom event and storage events (other tabs)
+        // listen for custom event and storage events (from other tabs)
         window.addEventListener("authChange", handleAuthChange);
         window.addEventListener("storage", handleAuthChange);
 
@@ -43,7 +43,7 @@ export default function App() {
     const handleLogout = () => {
         localStorage.removeItem("loggedInUser");
         setLoggedInUser(null);
-        // notify others (not strictly needed here but consistent)
+        // notify other tabs
         window.dispatchEvent(new Event("authChange"));
         // redirect to home
         window.location.href = "/";
@@ -73,7 +73,7 @@ export default function App() {
                                 <>
                                     <li><Link to="/user" className="hover:underline">User</Link></li>
                                     {isAdmin && <li><Link to="/admin" className="hover:underline">Admin</Link></li>}
-                                    {/* Logout displayed like a nav link */}
+                                    {/* Logout displayed like a nav link for consistency*/}
                                     <li>
                                         <a
                                             onClick={(e) => { e.preventDefault(); handleLogout(); }}

@@ -9,7 +9,7 @@ export default function AboutUs() {
                 backgroundImage: `url(${bgImage})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                //filter: "blur(1px)", // blur effect
+                //filter: "blur(1px)",
                 position: "relative",
             }}
         >

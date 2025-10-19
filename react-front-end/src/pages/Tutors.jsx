@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 export default function Tutors() {
-    // Example tutor data (replace with API call later)
+    // Example tutor data
     const tutors = [
         {
             name: "Sarah Johnson",
