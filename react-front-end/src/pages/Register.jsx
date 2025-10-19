@@ -1,6 +1,10 @@
+// src/pages/Register.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -14,13 +18,39 @@ export default function Register() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
         if (formData.password !== formData.confirmPassword) {
             alert("Passwords do not match!");
             return;
         }
-        // Placeholder: later connect to Spring Boot API
-        console.log("Register data:", formData);
-        alert("Registration submitted!");
+
+        // Get existing users from localStorage or default empty array
+        const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+
+        // Check for duplicate email
+        const emailExists = existingUsers.some(
+            (user) => user.email === formData.email
+        );
+
+        if (emailExists) {
+            alert("That email is already registered!");
+            return;
+        }
+
+        // Add the new user
+        const newUser = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+        };
+
+        existingUsers.push(newUser);
+
+        // Save back to localStorage
+        localStorage.setItem("users", JSON.stringify(existingUsers));
+
+        alert("Registration successful! You can now log in");
+        navigate("/login");
     };
 
     return (
@@ -77,7 +107,7 @@ export default function Register() {
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
                 >
                     Register
                 </button>

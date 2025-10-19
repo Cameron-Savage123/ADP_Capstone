@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/App.jsx
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Tutors from "./pages/Tutors";
@@ -16,6 +17,39 @@ import "./App.css";
 
 export default function App() {
     const [count, setCount] = useState(0);
+    const [loggedInUser, setLoggedInUser] = useState(null);
+
+    useEffect(() => {
+        // initial read
+        const user = JSON.parse(localStorage.getItem("loggedInUser"));
+        if (user) setLoggedInUser(user);
+
+        // handler to update when Login writes to localStorage in same tab
+        const handleAuthChange = () => {
+            const u = JSON.parse(localStorage.getItem("loggedInUser"));
+            setLoggedInUser(u);
+        };
+
+        // listen for custom event and storage events (other tabs)
+        window.addEventListener("authChange", handleAuthChange);
+        window.addEventListener("storage", handleAuthChange);
+
+        return () => {
+            window.removeEventListener("authChange", handleAuthChange);
+            window.removeEventListener("storage", handleAuthChange);
+        };
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem("loggedInUser");
+        setLoggedInUser(null);
+        // notify others (not strictly needed here but consistent)
+        window.dispatchEvent(new Event("authChange"));
+        // redirect to home
+        window.location.href = "/";
+    };
+
+    const isAdmin = loggedInUser?.email === "admin@gmail.com";
 
     return (
         <Router>
@@ -24,14 +58,32 @@ export default function App() {
                 <header className="bg-blue-600 text-white shadow-md">
                     <nav className="container mx-auto flex justify-between items-center p-4">
                         <h1 className="text-2xl font-bold">TutorConnect</h1>
-                        <ul className="flex gap-6">
+                        <ul className="flex gap-6 items-center">
                             <li><Link to="/" className="hover:underline">Home</Link></li>
                             <li><Link to="/tutors" className="hover:underline">Tutors</Link></li>
 
-                            <li><Link to="/login" className="hover:underline">Login</Link></li>
-                            <li><Link to="/register" className="hover:underline">Register</Link></li>
-                            <li><Link to="/User" className="hover:underline">User</Link></li>
-                            <li><Link to="/Admin" className="hover:underline">Admin</Link></li>
+                            {!loggedInUser && (
+                                <>
+                                    <li><Link to="/login" className="hover:underline">Login</Link></li>
+                                    <li><Link to="/register" className="hover:underline">Register</Link></li>
+                                </>
+                            )}
+
+                            {loggedInUser && (
+                                <>
+                                    <li><Link to="/user" className="hover:underline">User</Link></li>
+                                    {isAdmin && <li><Link to="/admin" className="hover:underline">Admin</Link></li>}
+                                    {/* Logout displayed like a nav link */}
+                                    <li>
+                                        <a
+                                            onClick={(e) => { e.preventDefault(); handleLogout(); }}
+                                            className="hover:underline cursor-pointer"
+                                        >
+                                            Logout
+                                        </a>
+                                    </li>
+                                </>
+                            )}
 
                             <li><Link to="/about" className="hover:underline">About Us</Link></li>
                         </ul>
