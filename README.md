@@ -21,3 +21,7 @@ npm install axios       //if first time running website
 npm run dev   // to get the website link
 
 In SQL the database should show up under the Schema section as TutorMeDB
+
+Admin Details:
+Email: admin@gmail.com
+Password: password
