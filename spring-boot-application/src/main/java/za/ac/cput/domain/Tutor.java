@@ -2,8 +2,11 @@ package za.ac.cput.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.List;
 
 /* Tutor.java
       Tutor POJO class
@@ -78,6 +81,36 @@ public class Tutor extends User {
                 '}';
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getUsername() {
+        return "";
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return super.isEnabled();
+    }
+
     // Implementation of builder class
     public static class TutorBuilder {
         //User attributes
@@ -89,7 +122,7 @@ public class Tutor extends User {
         private String password;
         private ZonedDateTime createdAt;
 
-        //Student attributes
+        //Tutor attributes
         private String tutorID;
         private double hourlyRate;
         private String bio;
