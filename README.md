@@ -27,4 +27,4 @@ Email: admin@gmail.com
 Password: password
 
 The main branch is where I(Cameron Savage's) entire work is.
-For all work that wasn't ingested into the main due to errors or incompleteness can be found in the forks.
+For all work that wasn't ingested into the main due to errors or incompleteness can be found in the respective member's forks.
